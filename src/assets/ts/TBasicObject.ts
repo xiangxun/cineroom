@@ -33,5 +33,8 @@ const stage = new Mesh(
 );
 stage.position.y = -25;
 stage.receiveShadow = true;
+stage.addEventListener("mouseenter", () => {
+  console.log("stage mouseenter");
+});
 
 basicObjectList.push(stage);

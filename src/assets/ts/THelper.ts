@@ -5,7 +5,7 @@ import {
   PointLightHelper,
   SpotLightHelper,
 } from "three";
-import { pointLight, spotLight } from "./TLight";
+import { pointLight, spotLight } from "./Light";
 
 export const helperList: Object3D[] = [];
 const axesHelper: AxesHelper = new AxesHelper(500);

@@ -23,6 +23,8 @@ import {
   MOUSE,
   Box3Helper,
   type Event,
+  Color,
+  MeshStandardMaterial,
 } from "three";
 // import Stats from "three/examples/jsm/libs/stats.module";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -54,28 +56,6 @@ export class TEngine {
       1,
       10000
     );
-
-    const gltfloader = new GLTFLoader();
-    // Load a glTF resource
-    gltfloader.load(
-      // resource URL
-      // "gltfModel/buildingDraco.gltf",
-      "gltfModel/cineRoom.glb",
-      // called when the resource is loaded
-      (gltf) => {
-        const object = gltf.scene;
-        //1.调整物体位置
-        const box = new Box3().setFromObject(object);
-        // const size = box.getSize(new Vector3()).length();
-        const center = box.getCenter(new Vector3());
-        object.position.x += object.position.x - center.x;
-        object.position.y += object.position.y - center.y;
-        object.position.z += object.position.z - center.z;
-        // object.position.y = 2.5;
-        console.log("@", gltf.scene);
-        scene.add(object);
-      }
-    );
     camera.position.set(-40, 30, 7);
     camera.lookAt(new Vector3(0, 0, 0));
     camera.up = new Vector3(0, 1, 0);
@@ -88,10 +68,19 @@ export class TEngine {
     const videoTexture = new VideoTexture(video);
     videoTexture.wrapS = videoTexture.wrapT = ClampToEdgeWrapping;
     videoTexture.minFilter = LinearFilter;
-    const videoMaterial = new MeshLambertMaterial({ map: videoTexture });
+    // const videoMaterial = new MeshLambertMaterial({ map: videoTexture });
+    const videoMaterial = new MeshBasicMaterial({ map: videoTexture });
     const screen = new Mesh(new BoxBufferGeometry(0.01, 27, 51), videoMaterial);
     screen.position.set(43, -6, -1.5);
-    // screen.add(positionalAudio);
+    screen.addEventListener("mouseenter", () => {
+      console.log("screen mouseEnter");
+    });
+    screen.addEventListener("mousemove", () => {
+      console.log("screen mousemove");
+    });
+    screen.addEventListener("mouseleave", () => {
+      console.log("screen mouseleave");
+    });
     scene.add(screen);
 
     //初始化OrbitControls
@@ -111,6 +100,7 @@ export class TEngine {
       camera,
       renderer.domElement
     );
+    transformControls.setSize(0.5);
     scene.add(transformControls);
 
     //判断此次鼠标事件是否为变换事件
@@ -123,13 +113,43 @@ export class TEngine {
     //初始化射线
     const raycaster = new Raycaster();
     const raycaster1 = new Raycaster();
+    const raycaster2 = new Raycaster();
 
     //给renderer的canvas对象添加鼠标事件
     const mouse = new Vector2();
+    let cacheObject: Object3D | null = null;
     renderer.domElement.addEventListener("mousemove", (event) => {
       mouse.x = 2 * (event.clientX / window.innerWidth) - 1;
       mouse.y = -2 * (event.clientY / window.innerHeight) + 1;
-      // console.log(mouse.x, mouse.y);
+      scene.remove(transformControls);
+      raycaster2.setFromCamera(mouse, camera);
+      const intersection = raycaster2.intersectObjects(scene.children);
+      // scene.add(transformControls);
+      if (intersection.length) {
+        const object = intersection[0].object;
+        if (object !== cacheObject) {
+          if (cacheObject) {
+            cacheObject.dispatchEvent({
+              type: "mouseleave",
+            });
+          }
+          object.dispatchEvent({
+            type: "mouseenter",
+          });
+        } else if (object === cacheObject) {
+          object.dispatchEvent({
+            type: "mousemove",
+          });
+        }
+        cacheObject = object;
+      } else {
+        if (cacheObject) {
+          cacheObject.dispatchEvent({
+            type: "mouseleave",
+          });
+        }
+        cacheObject = null;
+      }
     });
 
     const clickEvent = () => {
@@ -146,9 +166,6 @@ export class TEngine {
         if (intersection.length) {
           const object = intersection[0].object;
           console.log("click", object);
-
-          // camera.lookAt(object.position);
-          // orbitControls.target = object.position;
           scene.add(transformControls);
           transformControls.attach(object);
         }
@@ -158,19 +175,36 @@ export class TEngine {
       clearTimeout(timer);
       raycaster1.setFromCamera(mouse, camera);
       scene.remove(transformControls);
-      const intersection1 = raycaster1.intersectObjects(scene.children);
-      if (intersection1.length) {
-        const object1 = intersection1[0].object;
-        camera.lookAt(object1.position);
-        orbitControls.target = object1.position;
-        const box = new Box3().setFromObject(object1);
+      const intersection = raycaster1.intersectObjects(scene.children);
+      if (intersection.length) {
+        const object = intersection[0].object;
+        camera.lookAt(object.position);
+        orbitControls.target = object.position;
+        const box = new Box3().setFromObject(object);
         const helper = new Box3Helper(box);
         helper.raycast = () => {};
         scene.add(helper);
-        console.log(object1);
+        console.log(object);
       }
       console.log("delclick");
     };
+    document.addEventListener("keyup", (event) => {
+      console.log(event);
+      switch (event.key) {
+        case "e":
+          transformControls.mode = "translate";
+          break;
+        case "r":
+          transformControls.mode = "rotate";
+          break;
+        case "s":
+          transformControls.mode = "scale";
+          break;
+
+        default:
+          break;
+      }
+    });
     renderer.domElement.addEventListener("click", clickEvent);
     renderer.domElement.addEventListener("dblclick", delclickEvent);
 
@@ -201,6 +235,7 @@ export class TEngine {
   playMusic() {
     const listener = new AudioListener();
     this.camera.add(listener);
+    const randomColor: number = 0xffffff * Math.random();
 
     const audioL: HTMLAudioElement = document.getElementById(
       "musicL"
@@ -211,13 +246,13 @@ export class TEngine {
     positionalAudioL.setRefDistance(100);
     positionalAudioL.setMaxDistance(120);
     positionalAudioL.setDirectionalCone(120, 230, 0.1);
-    const helperL = new PositionalAudioHelper(positionalAudioL, 1);
+    const helperL = new PositionalAudioHelper(positionalAudioL, 0);
     helperL.raycast = () => {};
     positionalAudioL.add(helperL);
     const playerL = new Mesh(
       new SphereGeometry(0.5, 50, 50),
       new MeshBasicMaterial({
-        color: 0xffffff * Math.random(),
+        color: randomColor,
       })
     );
     playerL.position.set(40, -6, -28);
@@ -234,13 +269,13 @@ export class TEngine {
     positionalAudioR.setRefDistance(100);
     positionalAudioR.setMaxDistance(120);
     positionalAudioR.setDirectionalCone(120, 230, 0.1);
-    const helperR = new PositionalAudioHelper(positionalAudioR, 1);
+    const helperR = new PositionalAudioHelper(positionalAudioR, 0);
     helperR.raycast = () => {};
     positionalAudioR.add(helperR);
     const playerR = new Mesh(
       new SphereGeometry(0.5, 50, 50),
       new MeshBasicMaterial({
-        color: 0xffffff * Math.random(),
+        color: randomColor,
       })
     );
     playerR.position.set(40, -6, 25);

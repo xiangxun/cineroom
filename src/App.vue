@@ -5,58 +5,87 @@
     <video id="video" ref="video" controls="true">
       <source src="/video/最伟大的作品.mp4" type="video/mp4" />
     </video>
-    <audio id="musicL" preload="auto" ref="musicL" loop controls>
-      <!-- <source src="audio/还在流浪.ogg" type="audio/ogg" />
-      <source src="audio/还在流浪.mp3" type="audio/mpeg" /> -->
-      <source src="/audio/说好了不散.mp3" type="audio/mpeg" />
-    </audio>
-    <audio id="musicR" preload="auto" ref="musicR" loop controls>
-      <!-- <source src="audio/还在流浪.ogg" type="audio/ogg" /> -->
-      <!-- <source src="audio/还在流浪.mp3" type="audio/mpeg" /> -->
-      <source src="/audio/说好了不散.mp3" type="audio/mpeg" />
-    </audio>
+    <audio
+      id="musicL"
+      preload="auto"
+      ref="musicL"
+      loop
+      controls
+      crossOrigin="anonymous"
+      :src="songurl"
+    ></audio>
+    <audio
+      id="musicR"
+      preload="auto"
+      ref="musicR"
+      loop
+      controls
+      crossOrigin="anonymous"
+      :src="songurl"
+    ></audio>
+    <audio controls :src="songurl"></audio>
     <button @click="play" class="play">播放视频</button>
     <button @click="pause" class="pause">视频暂停</button>
     <button @click="playMusic">播放音乐</button>
     <button @click="pauseMusic">音乐暂停</button>
     <button @click="musicLMute">左音响静音</button>
     <button @click="musicRMute">右音响静音</button>
+    <p>{{ songurl }}</p>
   </div>
   <div class="overlay" ref="overlay">
-    <button @click="startButton" ref="start">Enter</button>
+    <button @click="enterButton" ref="enter">Enter</button>
     <p class="tip">带上耳机食用更佳</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { TEngine } from "./assets/ts/TEngine";
 import { basicObjectList } from "./assets/ts/TBasicObject";
-import { lightsList } from "./assets/ts/TLight";
-
-// import { helperList } from "./assets/ts/THelper";
-// import { gltfObject } from "./assets/ts/TLoadModel";
-// import { TCanvasTextureEditor } from "./assets/ts/TCanvasTextureEditor";
+import { lightsList } from "./assets/ts/Light";
+import { gltfPromise } from "./assets/ts/LoadModel";
+import { helperList } from "./assets/ts/THelper";
+import { Box3, Vector3 } from "three";
+import { reqSongs } from "./api/songs";
 
 const threeTarget = ref();
-const start = ref();
+const enter = ref();
 onMounted(() => {
   const TE = new TEngine(threeTarget.value);
   TE.addObject(...basicObjectList);
   TE.addObject(...lightsList);
-  // TE.addObject(...helperList);
-  start.value.addEventListener("click", function () {
+  gltfPromise.then((group) => {
+    const object = group.scene;
+    //将导入模型中心移到坐标原点
+    const box = new Box3().setFromObject(group.scene);
+    const center = box.getCenter(new Vector3());
+    object.position.x += object.position.x - center.x;
+    object.position.y += object.position.y - center.y;
+    object.position.z += object.position.z - center.z;
+    // object.position.set(center.x, center.y, center.z);
+    TE.addObject(object);
+  });
+  TE.addObject(...helperList);
+  enter.value.addEventListener("click", function () {
     TE.playMusic(), false;
   });
+  getSongs();
 });
-const overlay = ref();
 
-const startButton = () => {
-  overlay.value.remove();
+const songs = ref();
+const songurl = ref();
+const getSongs = async () => {
+  songs.value = await reqSongs("1907240912");
+  songurl.value = songs.value.data.data[0].url;
+  console.log("songs.value", songs.value);
+  console.log("songurl.value", songurl.value);
 };
 
+const overlay = ref();
+const enterButton = () => {
+  overlay.value.remove();
+};
 const video = ref();
-
 const play = () => {
   video.value.play();
 };
@@ -84,6 +113,7 @@ const musicRMute = () => {
     : (musicR.value.muted = true);
 };
 </script>
+
 <style scoped>
 .three-canvas {
   width: 100%;
