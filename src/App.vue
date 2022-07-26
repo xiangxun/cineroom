@@ -1,13 +1,12 @@
 <template>
   <div class="three-canvas" ref="threeTarget"></div>
-  <!-- <div id="blocker" ref="blocker"></div> -->
-
   <div class="overlay" ref="overlay">
     <button @click="enterButton" ref="enter">Enter</button>
     <p class="tip">带上耳机食用更佳</p>
   </div>
   <div class="container">
-    <MediaPlayer></MediaPlayer>
+    <MediaPlayer v-show="isShow"></MediaPlayer>
+    <button @click="show">收起/展开</button>
   </div>
 </template>
 <script lang="ts" setup>
@@ -18,8 +17,6 @@ import { lightsList } from "./assets/ts/Light";
 import { gltfPromise } from "./assets/ts/LoadModel";
 import { Box3, Vector3 } from "three";
 import MediaPlayer from "./components/MediaPlayer.vue";
-// import { reqSongs } from "./api/songs";
-
 // import { helperList } from "./assets/ts/Helper";
 
 const threeTarget = ref();
@@ -44,8 +41,14 @@ onMounted(() => {
   enter.value.addEventListener("click", function () {
     TE.playMusic(), false;
   });
-  // getSongs(songid.value);
 });
+
+let isShow = ref(true);
+const show = () => {
+  isShow.value = !isShow.value;
+  console.log(isShow);
+};
+
 const overlay = ref();
 const enterButton = () => {
   overlay.value.remove();
@@ -72,12 +75,13 @@ const enterButton = () => {
   background: rgba(0, 0, 0, 0.7);
 }
 .container {
-  position: fixed;
+  position: absolute;
   display: flex;
   flex-direction: column;
-  width: 150px;
-  left: 20px;
-  bottom: 20px;
+  flex-wrap: wrap;
+  width: 100px;
+  left: 10px;
+  bottom: 30px;
 }
 .tip {
   margin: 10px;
