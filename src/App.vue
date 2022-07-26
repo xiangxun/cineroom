@@ -1,52 +1,26 @@
 <template>
   <div class="three-canvas" ref="threeTarget"></div>
   <!-- <div id="blocker" ref="blocker"></div> -->
-  <div class="container">
-    <video id="video" ref="video" controls="true">
-      <source src="/video/最伟大的作品.mp4" type="video/mp4" />
-    </video>
-    <audio
-      id="musicL"
-      preload="auto"
-      ref="musicL"
-      loop
-      controls
-      crossOrigin="anonymous"
-      :src="songurl"
-    ></audio>
-    <audio
-      id="musicR"
-      preload="auto"
-      ref="musicR"
-      loop
-      controls
-      crossOrigin="anonymous"
-      :src="songurl"
-    ></audio>
-    <audio controls :src="songurl"></audio>
-    <button @click="play" class="play">播放视频</button>
-    <button @click="pause" class="pause">视频暂停</button>
-    <button @click="playMusic">播放音乐</button>
-    <button @click="pauseMusic">音乐暂停</button>
-    <button @click="musicLMute">左音响静音</button>
-    <button @click="musicRMute">右音响静音</button>
-    <p>{{ songurl }}</p>
-  </div>
+
   <div class="overlay" ref="overlay">
     <button @click="enterButton" ref="enter">Enter</button>
     <p class="tip">带上耳机食用更佳</p>
   </div>
+  <div class="container">
+    <MediaPlayer></MediaPlayer>
+  </div>
 </template>
-
-<script setup lang="ts">
+<script lang="ts" setup>
 import { onMounted, ref } from "vue";
 import { TEngine } from "./assets/ts/TEngine";
-import { basicObjectList } from "./assets/ts/TBasicObject";
+import { basicObjectList } from "./assets/ts/BasicObject";
 import { lightsList } from "./assets/ts/Light";
 import { gltfPromise } from "./assets/ts/LoadModel";
-import { helperList } from "./assets/ts/THelper";
 import { Box3, Vector3 } from "three";
-import { reqSongs } from "./api/songs";
+import MediaPlayer from "./components/MediaPlayer.vue";
+// import { reqSongs } from "./api/songs";
+
+// import { helperList } from "./assets/ts/Helper";
 
 const threeTarget = ref();
 const enter = ref();
@@ -62,55 +36,19 @@ onMounted(() => {
     object.position.x += object.position.x - center.x;
     object.position.y += object.position.y - center.y;
     object.position.z += object.position.z - center.z;
-    // object.position.set(center.x, center.y, center.z);
     TE.addObject(object);
+    console.log("#", object);
+    console.log("@", group);
   });
-  TE.addObject(...helperList);
+  // TE.addObject(...helperList);
   enter.value.addEventListener("click", function () {
     TE.playMusic(), false;
   });
-  getSongs();
+  // getSongs(songid.value);
 });
-
-const songs = ref();
-const songurl = ref();
-const getSongs = async () => {
-  songs.value = await reqSongs("1907240912");
-  songurl.value = songs.value.data.data[0].url;
-  console.log("songs.value", songs.value);
-  console.log("songurl.value", songurl.value);
-};
-
 const overlay = ref();
 const enterButton = () => {
   overlay.value.remove();
-};
-const video = ref();
-const play = () => {
-  video.value.play();
-};
-const pause = () => {
-  video.value.pause();
-};
-const musicL = ref();
-const musicR = ref();
-const playMusic = () => {
-  musicL.value.play();
-  musicR.value.play();
-};
-const pauseMusic = () => {
-  musicL.value.pause();
-  musicR.value.pause();
-};
-const musicLMute = () => {
-  musicL.value.muted == true
-    ? (musicL.value.muted = false)
-    : (musicL.value.muted = true);
-};
-const musicRMute = () => {
-  musicR.value.muted == true
-    ? (musicR.value.muted = false)
-    : (musicR.value.muted = true);
 };
 </script>
 
@@ -118,40 +56,6 @@ const musicRMute = () => {
 .three-canvas {
   width: 100%;
   height: 100%;
-}
-.container {
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  width: 300px;
-  left: 20px;
-  bottom: 20px;
-}
-video,
-audio {
-  display: none;
-}
-
-button {
-  background-color: transparent;
-  border: 0.1px 0.1px;
-  border-color: aqua;
-  color: #ffffff;
-  width: 100px;
-  height: 30px;
-  font-size: 14px;
-  margin: 2px;
-}
-button:hover {
-  background-color: aqua;
-  color: blue;
-}
-#blocker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
 }
 .overlay {
   position: absolute;
@@ -166,6 +70,14 @@ button:hover {
   justify-content: center;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.7);
+}
+.container {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+  left: 20px;
+  bottom: 20px;
 }
 .tip {
   margin: 10px;

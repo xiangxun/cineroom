@@ -37,9 +37,16 @@ import { Box3, Group, Vector3 } from "three";
 // );
 
 // export const gltfPromise = new Promise((resolve, reject) => {});
-
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath(
+  "/public/draco/"
+  // "https://www.gstatic.com/draco/versioned/decoders/1.4.3/"
+);
 const gltfLoader: GLTFLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
 export const gltfPromise = gltfLoader.loadAsync(
   // "/gltfModel/buildingDraco.gltf"
-  "/gltfModel/cineRoom.glb"
+  // "/gltfModel/cineroom.glb"
+  // "/gltfModel/unaatitled.glb"
+  "/gltfModel/cineroomDraco.glb"
 );

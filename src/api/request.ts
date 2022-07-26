@@ -1,6 +1,5 @@
-import { musicStore } from "../stores/index";
 import axios from "axios";
-import nprogress from "nprogress";
+// import nprogress from "nprogress";
 
 let requests = axios.create({
   baseURL: "https://netease-cloud-music-api-path-yu.vercel.app",

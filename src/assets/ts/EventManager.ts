@@ -1,6 +1,7 @@
 import {
   Camera,
   EventDispatcher,
+  Mesh,
   Object3D,
   Raycaster,
   Scene,
@@ -27,31 +28,63 @@ export class EventManager extends EventDispatcher {
 
     const mouse = this.mouse;
     const raycaster = this.raycaster;
-    const dom = params.dom;
+    const dom = this.dom;
+
+    // const getNormalizedMousePos = (event: MouseEvent | Touch) => {
+    //   return {
+    //     x: 2 * (event.clientX / dom.offsetWidth) - 1,
+    //     y: -2 * (event.clientY / dom.offsetHeight) + 1,
+    //   };
+    // };
 
     let cacheObject: Object3D | null = null;
-    dom.addEventListener("mousemove", (event) => {
-      mouse.x = 2 * (event.clientX / dom.offsetWidth) - 1;
-      mouse.y = -2 * (event.clientY / dom.offsetHeight) + 1;
-      raycaster.setFromCamera(mouse, camera);
-      const intersection = raycaster.intersectObjects(scene.children);
+    dom.addEventListener("mousedown", (event) => {
+      // 选取物体的操作
+      raycaster.setFromCamera(mouse, this.camera);
+      const intersection = raycaster.intersectObjects(this.scene.children);
+      this.dispatchEvent({
+        type: "mousedown",
+        intersection,
+      });
       if (intersection.length) {
         const object = intersection[0].object;
-        if (object !== cacheObject) {
+        object.dispatchEvent({
+          type: "mousedown",
+        });
+      }
+    });
+
+    dom.addEventListener("mousemove", (event) => {
+      // const { x, y } = getNormalizedMousePos(event);
+      // mouse.x = x;
+      // mouse.y = y;
+      mouse.x = 2 * (event.offsetX / dom.offsetWidth) - 1;
+      mouse.y = -2 * (event.offsetY / dom.offsetHeight) + 1;
+      raycaster.setFromCamera(mouse, this.camera);
+      const intersects = raycaster.intersectObjects(this.scene.children);
+      this.dispatchEvent({
+        type: "mousemove",
+        intersects,
+      });
+      if (intersects.length) {
+        const intersected = intersects[0].object;
+
+        if (intersected !== cacheObject) {
           if (cacheObject) {
+            console.log("mouseleave");
             cacheObject.dispatchEvent({
               type: "mouseleave",
             });
           }
-          object.dispatchEvent({
+          intersected.dispatchEvent({
             type: "mouseenter",
           });
-        } else if (object === cacheObject) {
-          object.dispatchEvent({
+        } else if (intersected === cacheObject) {
+          intersected.dispatchEvent({
             type: "mousemove",
           });
         }
-        cacheObject = object;
+        cacheObject = intersected;
       } else {
         if (cacheObject) {
           cacheObject.dispatchEvent({
@@ -59,6 +92,40 @@ export class EventManager extends EventDispatcher {
           });
         }
         cacheObject = null;
+      }
+    });
+
+    dom.addEventListener("mouseup", (event) => {
+      // 选取物体的操作
+      raycaster.setFromCamera(mouse, this.camera);
+      const intersection = raycaster.intersectObjects(this.scene.children);
+
+      this.dispatchEvent({
+        type: "mouseup",
+        intersection,
+      });
+      if (intersection.length) {
+        const object = intersection[0].object;
+        object.dispatchEvent({
+          type: "mouseup",
+        });
+      }
+    });
+
+    dom.addEventListener("click", (event) => {
+      // 选取物体的操作
+      raycaster.setFromCamera(mouse, this.camera);
+      const intersection = raycaster.intersectObjects(this.scene.children);
+
+      this.dispatchEvent({
+        type: "click",
+        intersection,
+      });
+      if (intersection.length) {
+        const object = intersection[0].object;
+        object.dispatchEvent({
+          type: "click",
+        });
       }
     });
   }
