@@ -1,8 +1,12 @@
 <template>
   <div class="container">
-    <video id="video" ref="video" controls="true" crossOrigin="anonymous" :src="videoUrl">
-      <!-- <source src="/video/最伟大的作品.mp4" type="video/mp4" /> -->
-    </video>
+    <video
+      id="video"
+      ref="videotarget"
+      controls="true"
+      crossOrigin="anonymous"
+      :src="videoUrl"
+    ></video>
     <audio
       id="musicL"
       preload="auto"
@@ -21,6 +25,10 @@
       crossOrigin="anonymous"
       :src="songurl"
     ></audio>
+    <button class="file-select-btn" @click="fileId.click()">
+      选择本地文件
+      <input type="file" ref="fileId" @change="getLocalAudio" class="file-input" />
+    </button>
     <button @click="playVideo" class="play">播放视频</button>
     <button @click="videoPause" class="pause">视频暂停</button>
     <button @click="playMusic">播放音乐</button>
@@ -28,8 +36,7 @@
     <button @click="musicLMute">左音响静音</button>
     <button @click="musicRMute">右音响静音</button>
     <input ref="songidInput" placeholder="请粘贴网易云分享链接" />
-    <button @click="submite">确定</button>
-    <!-- <p>{{ songurl }}</p> -->
+    <button @click="submit">确定</button>
   </div>
 </template>
 
@@ -37,22 +44,23 @@
 import { reqSongs, reqVideoUrl } from "@/api";
 import { onMounted, ref } from "vue";
 
+const fileId = ref();
+
 const songurl = ref();
 const videoUrl = ref();
 const songid = ref("1907240912");
 const mvid = ref(10908372);
 const songidInput = ref();
+
+//获取音视频
 const getSongs = async (songid: string) => {
   const result = await reqSongs(songid);
-  console.log("songs.value", result);
   songurl.value = result.data.data[0].url;
-  console.log("songurl.value", songurl.value);
 };
 const getVideoUrl = async (mvid: number) => {
   const result = await reqVideoUrl(mvid);
   videoUrl.value = result.data.data.url;
   console.log("mv", result);
-  // videoUrl.value = result.data
 };
 
 onMounted(() => {
@@ -60,15 +68,15 @@ onMounted(() => {
   getVideoUrl(mvid.value);
 });
 
-//获取音视频数据
-const submite = async () => {
+//通过输入获取音视频数据
+const submit = async () => {
   console.log(songidInput.value.value);
   const songidInputValue = songidInput.value.value;
-  const songId = songidInputValue.split("?i")[1].split("=")[1].split("&")[0];
+  const songId = songidInputValue?.split("?i")[1].split("=")[1].split("&")[0];
   console.log(songId);
 
   if (songidInputValue.includes("mv")) {
-    video.value.src = "";
+    videotarget.value.src = "";
     getVideoUrl(songId)
       .then(() => {
         playVideo();
@@ -83,20 +91,33 @@ const submite = async () => {
       })
       .catch();
   }
-
-  // songidInput.value.value = "";
-  // playMusic();
+};
+//获取本地音视频文件
+const getLocalAudio = () => {
+  let objFile = fileId.value;
+  console.log(objFile.value);
+  if (objFile.value === "") {
+    return false;
+  }
+  if (window.FileReader) {
+    let fileReader = new FileReader();
+    fileReader.readAsDataURL(objFile.files[0]);
+    fileReader.onloadend = (e) => {
+      songurl.value = e.target?.result;
+      videoUrl.value = e.target?.result;
+    };
+  }
 };
 
 //音视频播放
-const video = ref();
+const videotarget = ref();
 const musicL = ref();
 const musicR = ref();
 const playVideo = () => {
-  video.value.play();
+  videotarget.value.play();
 };
 const videoPause = () => {
-  video.value.pause();
+  videotarget.value.pause();
 };
 const playMusic = () => {
   musicL.value.play();
@@ -112,6 +133,10 @@ const musicLMute = () => {
 const musicRMute = () => {
   musicR.value.muted == true ? (musicR.value.muted = false) : (musicR.value.muted = true);
 };
+
+defineExpose({
+  videotarget,
+});
 </script>
 
 <style scoped>
@@ -123,5 +148,8 @@ input {
   width: 100px;
   font-size: 10px;
   height: 15px;
+}
+.file-select-btn .file-input {
+  display: none;
 }
 </style>

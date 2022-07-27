@@ -1,3 +1,4 @@
+import { AudioPlayer } from "./MediaPlayer";
 import {
   Scene,
   WebGLRenderer,
@@ -5,39 +6,24 @@ import {
   Vector3,
   Object3D,
   sRGBEncoding,
-  Box3,
-  VideoTexture,
-  LinearFilter,
-  ClampToEdgeWrapping,
-  BoxBufferGeometry,
   Mesh,
-  MeshLambertMaterial,
   PositionalAudio,
   AudioListener,
-  AudioLoader,
   SphereGeometry,
   MeshBasicMaterial,
-  MeshPhongMaterial,
-  Vector2,
-  Raycaster,
   MOUSE,
-  Box3Helper,
-  type Event,
-  Color,
-  MeshStandardMaterial,
-  Material,
 } from "three";
 // import Stats from "three/examples/jsm/libs/stats.module";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { PositionalAudioHelper } from "three/examples/jsm/helpers/POsitionalAudioHelper";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import { EventManager } from "./EventManager";
-export class TEngine {
+export class Base {
   private dom: HTMLElement;
   private renderer: WebGLRenderer;
   private eventManager: EventManager;
   private scene: Scene;
-  private camera: PerspectiveCamera;
+  public camera: PerspectiveCamera;
   // private listener: AudioListener;
 
   constructor(dom: HTMLElement) {
@@ -57,20 +43,6 @@ export class TEngine {
     camera.position.set(-40, 30, 7);
     camera.lookAt(new Vector3(0, 0, 0));
     camera.up = new Vector3(0, 1, 0);
-
-    //添加视频
-    const video: HTMLVideoElement = document.getElementById(
-      "video"
-    ) as HTMLVideoElement;
-    console.log(video);
-    const videoTexture = new VideoTexture(video);
-    videoTexture.wrapS = videoTexture.wrapT = ClampToEdgeWrapping;
-    videoTexture.minFilter = LinearFilter;
-    // const videoMaterial = new MeshLambertMaterial({ map: videoTexture });
-    const videoMaterial = new MeshBasicMaterial({ map: videoTexture });
-    const screen = new Mesh(new BoxBufferGeometry(0.01, 27, 51), videoMaterial);
-    screen.position.set(43, -6, -1.5);
-    scene.add(screen);
 
     //初始化OrbitControls
     const orbitControls: OrbitControls = new OrbitControls(
@@ -264,55 +236,25 @@ export class TEngine {
     this.scene = scene;
   }
   playMusic() {
+    //收听者，位置与camera绑定
     const listener = new AudioListener();
     this.camera.add(listener);
-    const randomColor: number = 0xffffff * Math.random();
-
-    const audioL: HTMLAudioElement = document.getElementById(
-      "musicL"
+    //左音响
+    const audioL: HTMLAudioElement = document.querySelector(
+      "#musicL"
     ) as HTMLAudioElement;
-    audioL.play();
-    const positionalAudioL = new PositionalAudio(listener);
-    positionalAudioL.setMediaElementSource(audioL);
-    positionalAudioL.setRefDistance(100);
-    positionalAudioL.setMaxDistance(120);
-    positionalAudioL.setDirectionalCone(120, 230, 0.1);
-    const helperL = new PositionalAudioHelper(positionalAudioL, 0);
-    helperL.raycast = () => {};
-    positionalAudioL.add(helperL);
-    const playerL = new Mesh(
-      new SphereGeometry(0.5, 50, 50),
-      new MeshBasicMaterial({
-        color: randomColor,
-      })
-    );
-    playerL.position.set(40, -6, -28);
-    playerL.rotation.y -= (Math.PI * 1) / 5;
-    playerL.add(positionalAudioL);
-    this.scene.add(playerL);
-
-    const audioR: HTMLAudioElement = document.getElementById(
-      "musicR"
+    const audioPlayerL = new AudioPlayer(audioL, listener);
+    audioPlayerL.player.position.set(40, -6, -28);
+    audioPlayerL.player.rotation.y -= (Math.PI * 1) / 5;
+    this.scene.add(audioPlayerL.player);
+    //右音响
+    const audioR: HTMLAudioElement = document.querySelector(
+      "#musicR"
     ) as HTMLAudioElement;
-    audioR.play();
-    const positionalAudioR = new PositionalAudio(listener);
-    positionalAudioR.setMediaElementSource(audioR);
-    positionalAudioR.setRefDistance(100);
-    positionalAudioR.setMaxDistance(120);
-    positionalAudioR.setDirectionalCone(120, 230, 0.1);
-    const helperR = new PositionalAudioHelper(positionalAudioR, 0);
-    helperR.raycast = () => {};
-    positionalAudioR.add(helperR);
-    const playerR = new Mesh(
-      new SphereGeometry(0.5, 50, 50),
-      new MeshBasicMaterial({
-        color: randomColor,
-      })
-    );
-    playerR.position.set(40, -6, 25);
-    playerR.rotation.y += (Math.PI * 5) / 4;
-    playerR.add(positionalAudioR);
-    this.scene.add(playerR);
+    const audioPlayerR = new AudioPlayer(audioR, listener);
+    audioPlayerR.player.position.set(40, -6, 25);
+    audioPlayerR.player.rotation.y += (Math.PI * 5) / 4;
+    this.scene.add(audioPlayerR.player);
   }
   addObject(...object: Object3D[]) {
     object.forEach((elem) => {

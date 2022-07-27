@@ -5,32 +5,37 @@
     <p class="tip">带上耳机食用更佳</p>
   </div>
   <div class="container">
-    <MediaPlayer v-show="isShow"></MediaPlayer>
+    <MediaPlayer v-show="isShow" ref="playerRef"></MediaPlayer>
     <button @click="show">收起/展开</button>
   </div>
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
-import { TEngine } from "./assets/ts/TEngine";
+import { Base } from "./assets/ts/Base";
 import { basicObjectList } from "./assets/ts/BasicObject";
 import { lightsList } from "./assets/ts/Light";
 import { gltfPromise } from "./assets/ts/LoadModel";
+import { VideoPlayer } from "./assets/ts/MediaPlayer";
 import MediaPlayer from "./components/MediaPlayer.vue";
 // import { helperList } from "./assets/ts/Helper";
-
+const playerRef = ref();
 const threeTarget = ref();
 const enter = ref();
 onMounted(() => {
-  const TE = new TEngine(threeTarget.value);
-  TE.addObject(...basicObjectList);
-  TE.addObject(...lightsList);
+  const base = new Base(threeTarget.value);
+  base.addObject(...basicObjectList);
+  base.addObject(...lightsList);
+  console.log("$", playerRef.value.videotarget);
+  const videoPlayer = new VideoPlayer(playerRef.value.videotarget);
+  base.addObject(videoPlayer.screen);
+
   gltfPromise.then((gltfModel) => {
-    TE.addObject(gltfModel);
+    base.addObject(gltfModel);
     console.log("@", gltfModel);
   });
-  // TE.addObject(...helperList);
+  // base.addObject(...helperList);
   enter.value.addEventListener("click", function () {
-    TE.playMusic(), false;
+    base.playMusic(), false;
   });
 });
 

@@ -1,4 +1,4 @@
-export class TCanvasTextureEditor {
+export class CanvasEditor {
   canvas: HTMLCanvasElement;
   constructor(width = 512, height = 512, bgColor = "#ffffff") {
     this.canvas = document.createElement("canvas");

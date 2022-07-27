@@ -1,9 +1,4 @@
-import // ClampToEdgeWrapping,
-// LinearFilter,
-// Texture,
-// TextureLoader,
-// VideoTexture,
-"three";
+import { CanvasTexture } from "three";
 // const textureLoader: TextureLoader = new TextureLoader();
 // export const pictureTexture: Texture = textureLoader.load("../logo.svg");
 
@@ -16,3 +11,4 @@ import // ClampToEdgeWrapping,
 //   videoTexture.wrapS = videoTexture.wrapT = ClampToEdgeWrapping;
 //   videoTexture.minFilter = LinearFilter;
 // }
+// export const lyricTexture = new CanvasTexture();
