@@ -29,20 +29,16 @@ import {
 } from "three";
 // import Stats from "three/examples/jsm/libs/stats.module";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PositionalAudioHelper } from "three/examples/jsm/helpers/POsitionalAudioHelper";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import { EventManager } from "./EventManager";
-// import { TEventManager } from "./TEventManager";
 export class TEngine {
   private dom: HTMLElement;
   private renderer: WebGLRenderer;
-  // private transformControls: TransformControls;
   private eventManager: EventManager;
   private scene: Scene;
   private camera: PerspectiveCamera;
   // private listener: AudioListener;
-  // private raycaster: Raycaster;
 
   constructor(dom: HTMLElement) {
     this.dom = dom;
@@ -74,15 +70,6 @@ export class TEngine {
     const videoMaterial = new MeshBasicMaterial({ map: videoTexture });
     const screen = new Mesh(new BoxBufferGeometry(0.01, 27, 51), videoMaterial);
     screen.position.set(43, -6, -1.5);
-    // screen.addEventListener("mouseenter", () => {
-    //   console.log("screen mouseEnter");
-    // });
-    // screen.addEventListener("mousemove", () => {
-    //   console.log("screen mousemove");
-    // });
-    // screen.addEventListener("mouseleave", () => {
-    //   console.log("screen mouseleave");
-    // });
     scene.add(screen);
 
     //初始化OrbitControls

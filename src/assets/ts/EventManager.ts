@@ -55,9 +55,6 @@ export class EventManager extends EventDispatcher {
     });
 
     dom.addEventListener("mousemove", (event) => {
-      // const { x, y } = getNormalizedMousePos(event);
-      // mouse.x = x;
-      // mouse.y = y;
       mouse.x = 2 * (event.offsetX / dom.offsetWidth) - 1;
       mouse.y = -2 * (event.offsetY / dom.offsetHeight) + 1;
       raycaster.setFromCamera(mouse, this.camera);

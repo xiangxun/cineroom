@@ -15,7 +15,6 @@ import { TEngine } from "./assets/ts/TEngine";
 import { basicObjectList } from "./assets/ts/BasicObject";
 import { lightsList } from "./assets/ts/Light";
 import { gltfPromise } from "./assets/ts/LoadModel";
-import { Box3, Vector3 } from "three";
 import MediaPlayer from "./components/MediaPlayer.vue";
 // import { helperList } from "./assets/ts/Helper";
 
@@ -25,17 +24,9 @@ onMounted(() => {
   const TE = new TEngine(threeTarget.value);
   TE.addObject(...basicObjectList);
   TE.addObject(...lightsList);
-  gltfPromise.then((group) => {
-    const object = group.scene;
-    //将导入模型中心移到坐标原点
-    const box = new Box3().setFromObject(group.scene);
-    const center = box.getCenter(new Vector3());
-    object.position.x += object.position.x - center.x;
-    object.position.y += object.position.y - center.y;
-    object.position.z += object.position.z - center.z;
-    TE.addObject(object);
-    console.log("#", object);
-    console.log("@", group);
+  gltfPromise.then((gltfModel) => {
+    TE.addObject(gltfModel);
+    console.log("@", gltfModel);
   });
   // TE.addObject(...helperList);
   enter.value.addEventListener("click", function () {

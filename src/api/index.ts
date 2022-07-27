@@ -10,6 +10,11 @@ export const reqSongs = (id: string) => {
   console.log(query);
   return requests.get("/song/url?" + query);
 };
+// 获取歌词
+export function getLyric(id: string) {
+  return requests.get("/lyric?id=" + id);
+}
+
 // 获取mv url地址
 export function reqVideoUrl(id: number) {
   return requests.get(`/mv/url?id=${id}`);

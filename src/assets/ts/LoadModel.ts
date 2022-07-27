@@ -1,52 +1,29 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 import { Box3, Group, Vector3 } from "three";
-// import type { Object3D } from "three";
 
-// export const gltfObject: Group[] = [];
-
-// // Instantiate a loader
-// const gltfloader = new GLTFLoader();
-// // Optional: Provide a DRACOLoader instance to decode compressed mesh data
-// const dracoLoader = new DRACOLoader();
-// dracoLoader.setDecoderPath(
-//   "https://www.gstatic.com/draco/versioned/decoders/1.4.3/"
-// );
-// gltfloader.setDRACOLoader(dracoLoader);
-
-// // Load a glTF resource
-// gltfloader.load(
-//   // resource URL
-//   // "gltfModel/buildingDraco.gltf",
-//   "gltfModel/cineRoom.glb",
-//   // called when the resource is loaded
-//   (gltf) => {
-//     const object = gltf.scene;
-//     //1.调整物体位置
-//     const box = new Box3().setFromObject(object);
-//     // const size = box.getSize(new Vector3()).length();
-//     const center = box.getCenter(new Vector3());
-//     object.position.x += object.position.x - center.x;
-//     object.position.y += object.position.y - center.y;
-//     object.position.z += object.position.z - center.z;
-//     // object.position.y = 5;
-//     console.log("@", gltf.scene);
-
-//     gltfObject.push(object);
-//   }
-// );
-
-// export const gltfPromise = new Promise((resolve, reject) => {});
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath(
-  "/public/draco/"
-  // "https://www.gstatic.com/draco/versioned/decoders/1.4.3/"
-);
+// "https://www.gstatic.com/draco/versioned/decoders/1.4.3/"
+const dracoLoader = new DRACOLoader().setDecoderPath("draco/");
 const gltfLoader: GLTFLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(dracoLoader);
-export const gltfPromise = gltfLoader.loadAsync(
-  // "/gltfModel/buildingDraco.gltf"
-  // "/gltfModel/cineroom.glb"
-  // "/gltfModel/unaatitled.glb"
-  "/gltfModel/cineroomDraco.glb"
-);
+// export const gltfPromise1 = gltfLoader.loadAsync(
+//   "/gltfModel/cineroomDraco.glb"
+// );
+
+export const gltfPromise = new Promise<Group>((resolve, reject) => {
+  gltfLoader
+    .loadAsync("/gltfModel/cineroomDraco.glb")
+    .then((gltf) => {
+      const gltfModel: Group = gltf.scene;
+      //将导入模型中心移到坐标原点
+      const box = new Box3().setFromObject(gltfModel);
+      const center = box.getCenter(new Vector3());
+      gltfModel.position.x += gltfModel.position.x - center.x;
+      gltfModel.position.y += gltfModel.position.y - center.y;
+      gltfModel.position.z += gltfModel.position.z - center.z;
+      resolve(gltfModel);
+    })
+    .catch((err) => {
+      reject(err);
+    });
+});

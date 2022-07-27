@@ -21,7 +21,6 @@
       crossOrigin="anonymous"
       :src="songurl"
     ></audio>
-    <audio controls :src="songurl"></audio>
     <button @click="playVideo" class="play">播放视频</button>
     <button @click="videoPause" class="pause">视频暂停</button>
     <button @click="playMusic">播放音乐</button>
@@ -61,22 +60,23 @@ onMounted(() => {
   getVideoUrl(mvid.value);
 });
 
+//获取音视频数据
 const submite = async () => {
-  musicL.value.src = "";
-  musicR.value.src = "";
-  video.value.src = "";
   console.log(songidInput.value.value);
   const songidInputValue = songidInput.value.value;
   const songId = songidInputValue.split("?i")[1].split("=")[1].split("&")[0];
   console.log(songId);
 
   if (songidInputValue.includes("mv")) {
+    video.value.src = "";
     getVideoUrl(songId)
       .then(() => {
         playVideo();
       })
       .catch();
   } else {
+    musicL.value.src = "";
+    musicR.value.src = "";
     getSongs(songId)
       .then(() => {
         playMusic();
