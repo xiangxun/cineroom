@@ -18,6 +18,7 @@ import { gltfPromise } from "./assets/ts/LoadModel";
 import { VideoPlayer } from "./assets/ts/MediaPlayer";
 import MediaPlayer from "./components/MediaPlayer.vue";
 // import { helperList } from "./assets/ts/Helper";
+import { lyric, lyricList, lyricSprite } from "./assets/ts/Lyric";
 const playerRef = ref();
 const threeTarget = ref();
 const enter = ref();
@@ -25,18 +26,19 @@ onMounted(() => {
   const base = new Base(threeTarget.value);
   base.addObject(...basicObjectList);
   base.addObject(...lightsList);
-  console.log("$", playerRef.value.videotarget);
+
   const videoPlayer = new VideoPlayer(playerRef.value.videotarget);
   base.addObject(videoPlayer.screen);
 
   gltfPromise.then((gltfModel) => {
-    base.addObject(gltfModel);
     console.log("@", gltfModel);
+    base.addObject(gltfModel);
   });
   // base.addObject(...helperList);
   enter.value.addEventListener("click", function () {
     base.playMusic(), false;
   });
+  base.addObject(...lyricList);
 });
 
 let isShow = ref(true);

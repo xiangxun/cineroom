@@ -5,7 +5,7 @@
       ref="videotarget"
       controls="true"
       crossOrigin="anonymous"
-      :src="videoUrl"
+      :src="videourl"
     ></video>
     <audio
       id="musicL"
@@ -41,43 +41,49 @@
 </template>
 
 <script lang="ts" setup>
-import { reqSongs, reqVideoUrl } from "@/api";
+import { useStore } from "@/store";
+import { parseLyric, type LineItem } from "@/utils/lyric";
 import { onMounted, ref } from "vue";
 
+// import { getLyricData } from "../assets/ts/Textures";
+
+const store = useStore();
 const fileId = ref();
-
 const songurl = ref();
-const videoUrl = ref();
-const songid = ref("1907240912");
-const mvid = ref(10908372);
+const videourl = ref();
+const songid = ref("1148123");
+const mvid = ref(14360887);
 const songidInput = ref();
-
-//获取音视频
-const getSongs = async (songid: string) => {
-  const result = await reqSongs(songid);
-  songurl.value = result.data.data[0].url;
-};
-const getVideoUrl = async (mvid: number) => {
-  const result = await reqVideoUrl(mvid);
-  videoUrl.value = result.data.data.url;
-  console.log("mv", result);
-};
-
-onMounted(() => {
-  getSongs(songid.value);
-  getVideoUrl(mvid.value);
+//https://music.163.com/song?id=1148123&userid=135775831
+onMounted(async () => {
+  await store.getSongs(songid.value);
+  getLyricData();
+  await store.getVideoUrl(mvid.value);
+  videourl.value = store.videourl;
+  songurl.value = store.songurl;
 });
+
+let lrcArr: LineItem[] = [];
+const getLyricData = () => {
+  const store = useStore();
+  const lrc: string = store.lyric as string;
+  lrcArr = parseLyric(lrc);
+  // console.log(store.lyric);
+  console.log("lrcArr", lrcArr);
+};
 
 //通过输入获取音视频数据
 const submit = async () => {
-  console.log(songidInput.value.value);
   const songidInputValue = songidInput.value.value;
-  const songId = songidInputValue?.split("?i")[1].split("=")[1].split("&")[0];
-  console.log(songId);
+  const songId = songidInputValue?.split("?i")[1]?.split("=")[1]?.split("&")[0];
 
   if (songidInputValue.includes("mv")) {
     videotarget.value.src = "";
-    getVideoUrl(songId)
+    store
+      .getVideoUrl(songId)
+      .then(() => {
+        videourl.value = store.videourl;
+      })
       .then(() => {
         playVideo();
       })
@@ -85,27 +91,16 @@ const submit = async () => {
   } else {
     musicL.value.src = "";
     musicR.value.src = "";
-    getSongs(songId)
+    store
+      .getSongs(songId)
+      .then(() => {
+        songurl.value = store.songurl;
+        getLyricData();
+      })
       .then(() => {
         playMusic();
       })
       .catch();
-  }
-};
-//获取本地音视频文件
-const getLocalAudio = () => {
-  let objFile = fileId.value;
-  console.log(objFile.value);
-  if (objFile.value === "") {
-    return false;
-  }
-  if (window.FileReader) {
-    let fileReader = new FileReader();
-    fileReader.readAsDataURL(objFile.files[0]);
-    fileReader.onloadend = (e) => {
-      songurl.value = e.target?.result;
-      videoUrl.value = e.target?.result;
-    };
   }
 };
 
@@ -120,6 +115,7 @@ const videoPause = () => {
   videotarget.value.pause();
 };
 const playMusic = () => {
+  console.log(songurl.value);
   musicL.value.play();
   musicR.value.play();
 };
@@ -128,10 +124,33 @@ const pauseMusic = () => {
   musicR.value.pause();
 };
 const musicLMute = () => {
-  musicL.value.muted == true ? (musicL.value.muted = false) : (musicL.value.muted = true);
+  musicL.value.muted == true
+    ? (musicL.value.muted = false)
+    : (musicL.value.muted = true);
 };
 const musicRMute = () => {
-  musicR.value.muted == true ? (musicR.value.muted = false) : (musicR.value.muted = true);
+  musicR.value.muted == true
+    ? (musicR.value.muted = false)
+    : (musicR.value.muted = true);
+};
+// 获取本地音视频文件
+const getLocalAudio = () => {
+  let objFile = fileId.value;
+  console.log(objFile.value);
+  if (objFile.value === "") {
+    return false;
+  }
+  if (window.FileReader) {
+    let fileReader = new FileReader();
+    fileReader.readAsDataURL(objFile.files[0]);
+    fileReader.onloadend = (e) => {
+      songurl.value = e.target?.result;
+      videourl.value = e.target?.result;
+    };
+    fileReader.onload = () => {
+      console.log("数据读取完成");
+    };
+  }
 };
 
 defineExpose({

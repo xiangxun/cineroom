@@ -7,7 +7,12 @@ import {
   Object3D,
   SphereGeometry,
   MeshLambertMaterial,
+  MeshBasicMaterial,
+  DoubleSide,
+  Box3,
+  Plane,
 } from "three";
+import { clipPlane, planeHelper } from "./ClippingBox";
 // import { videoTexture } from "./TTextures";
 export const basicObjectList: Object3D[] = [];
 
@@ -29,7 +34,10 @@ earth.position.set(20, 5, 0);
 
 const stage = new Mesh(
   new BoxBufferGeometry(500, 0.1, 500),
-  new MeshStandardMaterial()
+  new MeshStandardMaterial({
+    clippingPlanes: [clipPlane],
+    clipIntersection: true,
+  })
 );
 stage.position.y = -25;
 stage.receiveShadow = true;
@@ -37,4 +45,6 @@ stage.addEventListener("mouseenter", () => {
   console.log("stage mouseenter");
 });
 
-basicObjectList.push(stage);
+const Box = new Box3().setFromObject(stage);
+
+basicObjectList.push(stage, planeHelper);

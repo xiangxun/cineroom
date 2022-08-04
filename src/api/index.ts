@@ -11,7 +11,7 @@ export const reqSongs = (id: string) => {
   return requests.get("/song/url?" + query);
 };
 // 获取歌词
-export function getLyric(id: string) {
+export function reqLyric(id: string) {
   return requests.get("/lyric?id=" + id);
 }
 

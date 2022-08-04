@@ -1,4 +1,5 @@
 import {
+  Audio,
   AudioAnalyser,
   BoxBufferGeometry,
   ClampToEdgeWrapping,
@@ -10,12 +11,11 @@ import {
   SphereGeometry,
   VideoTexture,
 } from "three";
-import { PositionalAudioHelper } from "three/examples/jsm/helpers/PositionalAudioHelper";
+// import { PositionalAudioHelper } from "three/examples/jsm/helpers/PositionalAudioHelper";
 
 export class VideoPlayer {
   screen!: Mesh;
   constructor(video: HTMLVideoElement) {
-    console.log("video", video);
     const videoTexture = new VideoTexture(video);
     videoTexture.wrapS = videoTexture.wrapT = ClampToEdgeWrapping;
     videoTexture.minFilter = LinearFilter;
@@ -31,16 +31,15 @@ export class AudioPlayer {
   player: Mesh;
   constructor(audio: HTMLAudioElement, listener: THREE.AudioListener) {
     const randomColor: number = 0xffffff * Math.random();
-    const analyser = new AudioAnalyser(audio);
     audio.play();
     const positionalAudio = new PositionalAudio(listener);
     positionalAudio.setMediaElementSource(audio);
     positionalAudio.setRefDistance(100);
     positionalAudio.setMaxDistance(120);
     positionalAudio.setDirectionalCone(120, 230, 0.1);
-    const helper = new PositionalAudioHelper(positionalAudio, 0);
-    helper.raycast = () => {};
-    positionalAudio.add(helper);
+    // const helper = new PositionalAudioHelper(positionalAudio, 0);
+    // helper.raycast = () => {};
+    // positionalAudio.add(helper);
     const player = new Mesh(
       new SphereGeometry(0.5, 50, 50),
       new MeshBasicMaterial({

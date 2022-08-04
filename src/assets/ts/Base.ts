@@ -7,15 +7,13 @@ import {
   Object3D,
   sRGBEncoding,
   Mesh,
-  PositionalAudio,
   AudioListener,
-  SphereGeometry,
   MeshBasicMaterial,
   MOUSE,
 } from "three";
 // import Stats from "three/examples/jsm/libs/stats.module";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { PositionalAudioHelper } from "three/examples/jsm/helpers/POsitionalAudioHelper";
+// import { PositionalAudioHelper } from "three/examples/jsm/helpers/POsitionalAudioHelper";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import { EventManager } from "./EventManager";
 export class Base {
@@ -31,8 +29,10 @@ export class Base {
     const renderer = new WebGLRenderer({
       antialias: true,
     });
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = true; //阴影可见
     renderer.outputEncoding = sRGBEncoding;
+    renderer.localClippingEnabled = true; //剖切局部效果
+
     const scene = new Scene();
     const camera = new PerspectiveCamera(
       45,
@@ -78,13 +78,14 @@ export class Base {
 
     //给renderer的canvas对象添加鼠标事件
     // const mouse = new Vector2();
-    let cacheObject: Mesh | null = null;
     //事件管理
     const eventManager = new EventManager({
       dom: renderer.domElement,
       scene: scene,
       camera: camera,
     });
+
+    let cacheObject: Mesh | null = null;
     eventManager.addEventListener("mousemove", (event) => {
       if (event.intersects.length) {
         const intersected = event.intersects[0].object;
@@ -96,13 +97,13 @@ export class Base {
           return;
         } else if (intersected !== cacheObject && cacheObject) {
           (cacheObject.material as MeshBasicMaterial).color.multiplyScalar(0.1);
-          (cacheObject.material as MeshBasicMaterial).transparent = false;
+          // (cacheObject.material as MeshBasicMaterial).transparent = false;
           // (cacheObject.material as MeshLambertMaterial).emissive.set(1);
         }
         if (intersected.material) {
           intersected.material.color.multiplyScalar(10);
-          intersected.material.transparent = true;
-          intersected.material.opacity = 0.01;
+          // intersected.material.transparent = true;
+          // intersected.material.opacity = 0.01;
 
           // intersected.material.emissive.setHex(0xffff00);
           cacheObject = intersected;
@@ -110,11 +111,35 @@ export class Base {
       } else {
         if (cacheObject) {
           (cacheObject.material as MeshBasicMaterial).color.multiplyScalar(0.1);
-          (cacheObject.material as MeshBasicMaterial).transparent = false;
+          // (cacheObject.material as MeshBasicMaterial).transparent = false;
           // (cacheObject.material as MeshLambertMaterial).emissive.set(1);
 
           cacheObject = null;
         }
+      }
+    });
+
+    eventManager.addEventListener("click", (event) => {
+      if (transFlag) {
+        transFlag = false;
+        return false;
+      }
+      if (event.intersection.length) {
+        const object = event.intersection[0].object as Object3D;
+        console.log(object);
+        if (object.type === "TransformControlsPlane") {
+          transformControls.detach();
+          scene.remove(transformControls);
+        } else {
+          scene.add(transformControls);
+          transformControls.attach(
+            object
+            // object.parent instanceof Group ? object.parent : object
+          );
+        }
+      } else {
+        transformControls.detach();
+        scene.remove(transformControls);
       }
     });
 
@@ -190,17 +215,21 @@ export class Base {
     //   }
     //   console.log("delclick");
     // };
+
     document.addEventListener("keyup", (event) => {
       console.log(event);
       switch (event.key) {
         case "e":
           transformControls.mode = "translate";
+          //切换至平移模式
           break;
         case "r":
           transformControls.mode = "rotate";
+          //切换至旋转模式
           break;
         case "s":
           transformControls.mode = "scale";
+          //切换至缩放模式
           break;
 
         default:
@@ -235,6 +264,7 @@ export class Base {
     this.camera = camera;
     this.scene = scene;
   }
+
   playMusic() {
     //收听者，位置与camera绑定
     const listener = new AudioListener();
@@ -256,6 +286,7 @@ export class Base {
     audioPlayerR.player.rotation.y += (Math.PI * 5) / 4;
     this.scene.add(audioPlayerR.player);
   }
+
   addObject(...object: Object3D[]) {
     object.forEach((elem) => {
       this.scene.add(elem);

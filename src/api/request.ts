@@ -1,5 +1,6 @@
 import axios from "axios";
-// import nprogress from "nprogress";
+import nprogress from "nprogress";
+import "nprogress/nprogress.css";
 
 let requests = axios.create({
   baseURL: "https://netease-cloud-music-api-path-yu.vercel.app",
@@ -10,6 +11,7 @@ let requests = axios.create({
 //添加请求拦截器
 requests.interceptors.request.use(
   (config) => {
+    nprogress.start();
     return config;
   },
   (err) => {
@@ -19,6 +21,7 @@ requests.interceptors.request.use(
 //添加响应拦截器
 requests.interceptors.response.use(
   (data) => {
+    nprogress.done();
     return data;
   },
   (err) => {
