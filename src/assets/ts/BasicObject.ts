@@ -47,4 +47,5 @@ stage.addEventListener("mouseenter", () => {
 
 const Box = new Box3().setFromObject(stage);
 
-basicObjectList.push(stage, planeHelper);
+// basicObjectList.push(stage, planeHelper);
+basicObjectList.push(stage);

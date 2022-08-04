@@ -31,7 +31,7 @@ export class Base {
     });
     renderer.shadowMap.enabled = true; //阴影可见
     renderer.outputEncoding = sRGBEncoding;
-    renderer.localClippingEnabled = true; //剖切局部效果
+    // renderer.localClippingEnabled = true; //剖切局部效果
 
     const scene = new Scene();
     const camera = new PerspectiveCamera(
