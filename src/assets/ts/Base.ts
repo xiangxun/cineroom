@@ -80,8 +80,6 @@ export class Base {
       camera,
       renderer.domElement
     );
-    // transformControls.setSize(0.5);
-    // scene.add(transformControls);
 
     //判断此次鼠标事件是否为变换事件
     let transFlag = false;
@@ -89,7 +87,6 @@ export class Base {
       transFlag = true;
       console.log(transFlag);
     });
-    let timer: number | undefined;
 
     //事件管理
     const eventManager = new EventManager({
@@ -132,6 +129,7 @@ export class Base {
       }
     });
 
+    let timer: number | undefined;
     eventManager.addEventListener("click", (event) => {
       clearTimeout(timer);
       timer = setTimeout(() => {
@@ -160,10 +158,13 @@ export class Base {
       }, 300);
     });
 
-    eventManager.addEventListener("delclick", (event) => {
+    //双击选择物体成为旋转中心
+    eventManager.addEventListener("dblclick", (event) => {
       clearTimeout(timer);
+      transformControls.detach();
+      scene.remove(transformControls);
       if (event.intersection.length) {
-        const object = event.intersection[0].object;
+        const object = event.intersection[0].object as Object3D;
         camera.lookAt(object.position);
         orbitControls.target = object.position;
         const box = new Box3().setFromObject(object);
@@ -172,7 +173,7 @@ export class Base {
         scene.add(helper);
         console.log(object);
       }
-      console.log("delclick");
+      console.log("dblclick");
     });
 
     // const clickEvent = (event: MouseEvent | Touch) => {
@@ -243,7 +244,7 @@ export class Base {
     const animate = () => {
       const delta = clock.getDelta();
       orbitControls.update();
-      flyControls.update(delta);
+      // flyControls.update(delta);
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     };

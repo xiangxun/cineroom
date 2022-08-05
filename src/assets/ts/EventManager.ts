@@ -126,19 +126,19 @@ export class EventManager extends EventDispatcher {
       }
     });
     //双击事件
-    dom.addEventListener("delclick", (event) => {
+    dom.addEventListener("dblclick", (event) => {
       // 选取物体的操作
       raycaster.setFromCamera(mouse, this.camera);
       const intersection = raycaster.intersectObjects(this.scene.children);
 
       this.dispatchEvent({
-        type: "delclick",
+        type: "dblclick",
         intersection,
       });
       if (intersection.length) {
         const object = intersection[0].object;
         object.dispatchEvent({
-          type: "delclick",
+          type: "dblclick",
         });
       }
     });
