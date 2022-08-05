@@ -10,11 +10,17 @@ import {
   AudioListener,
   MeshBasicMaterial,
   MOUSE,
+  Fog,
+  Clock,
+  Box3,
+  Box3Helper,
 } from "three";
 // import Stats from "three/examples/jsm/libs/stats.module";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 // import { PositionalAudioHelper } from "three/examples/jsm/helpers/POsitionalAudioHelper";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
+import { FlyControls } from "three/examples/jsm/controls/FlyControls";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { EventManager } from "./EventManager";
 export class Base {
   private dom: HTMLElement;
@@ -34,6 +40,7 @@ export class Base {
     // renderer.localClippingEnabled = true; //剖切局部效果
 
     const scene = new Scene();
+    scene.fog = new Fog(0xffffff * Math.random(), 0, 750);
     const camera = new PerspectiveCamera(
       45,
       dom.offsetWidth / dom.offsetHeight,
@@ -57,6 +64,17 @@ export class Base {
       RIGHT: MOUSE.ROTATE,
     };
 
+    //
+    const pointLockControls = new PointerLockControls(
+      camera,
+      renderer.domElement
+    );
+
+    const flyControls = new FlyControls(camera, renderer.domElement);
+    flyControls.movementSpeed = 10;
+    flyControls.rollSpeed = Math.PI / 24;
+    flyControls.autoForward = false;
+
     //初始化transformControls
     const transformControls: TransformControls = new TransformControls(
       camera,
@@ -69,15 +87,10 @@ export class Base {
     let transFlag = false;
     transformControls.addEventListener("mouseDown", () => {
       transFlag = true;
+      console.log(transFlag);
     });
     let timer: number | undefined;
 
-    //初始化射线
-    // const raycaster = new Raycaster();
-    // const raycaster1 = new Raycaster();
-
-    //给renderer的canvas对象添加鼠标事件
-    // const mouse = new Vector2();
     //事件管理
     const eventManager = new EventManager({
       dom: renderer.domElement,
@@ -120,62 +133,47 @@ export class Base {
     });
 
     eventManager.addEventListener("click", (event) => {
-      if (transFlag) {
-        transFlag = false;
-        return false;
-      }
-      if (event.intersection.length) {
-        const object = event.intersection[0].object as Object3D;
-        console.log(object);
-        if (object.type === "TransformControlsPlane") {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (transFlag) {
+          transFlag = false;
+          return false;
+        }
+        if (event.intersection.length) {
+          const object = event.intersection[0].object as Object3D;
+          console.log(object);
+          if (object.type === "TransformControlsPlane") {
+            transformControls.detach();
+            scene.remove(transformControls);
+          } else {
+            transformControls.setSize(0.5);
+            scene.add(transformControls);
+            transformControls.attach(
+              object
+              // object.parent instanceof Group ? object.parent : object
+            );
+          }
+        } else {
           transformControls.detach();
           scene.remove(transformControls);
-        } else {
-          scene.add(transformControls);
-          transformControls.attach(
-            object
-            // object.parent instanceof Group ? object.parent : object
-          );
         }
-      } else {
-        transformControls.detach();
-        scene.remove(transformControls);
-      }
+      }, 300);
     });
 
-    // renderer.domElement.addEventListener("mousemove", (event) => {
-    //   mouse.x = 2 * (event.clientX / window.innerWidth) - 1;
-    //   mouse.y = -2 * (event.clientY / window.innerHeight) + 1;
-    //   scene.remove(transformControls);
-    //   raycaster2.setFromCamera(mouse, camera);
-    //   const intersection = raycaster2.intersectObjects(scene.children);
-    //   // scene.add(transformControls);
-    //   if (intersection.length) {
-    //     const object = intersection[0].object;
-    //     if (object !== cacheObject) {
-    //       if (cacheObject) {
-    //         cacheObject.dispatchEvent({
-    //           type: "mouseleave",
-    //         });
-    //       }
-    //       object.dispatchEvent({
-    //         type: "mouseenter",
-    //       });
-    //     } else if (object === cacheObject) {
-    //       object.dispatchEvent({
-    //         type: "mousemove",
-    //       });
-    //     }
-    //     cacheObject = object;
-    //   } else {
-    //     if (cacheObject) {
-    //       cacheObject.dispatchEvent({
-    //         type: "mouseleave",
-    //       });
-    //     }
-    //     cacheObject = null;
-    //   }
-    // });
+    eventManager.addEventListener("delclick", (event) => {
+      clearTimeout(timer);
+      if (event.intersection.length) {
+        const object = event.intersection[0].object;
+        camera.lookAt(object.position);
+        orbitControls.target = object.position;
+        const box = new Box3().setFromObject(object);
+        const helper = new Box3Helper(box);
+        helper.raycast = () => {};
+        scene.add(helper);
+        console.log(object);
+      }
+      console.log("delclick");
+    });
 
     // const clickEvent = (event: MouseEvent | Touch) => {
     //   mouse.x = 2 * (event.clientX / window.innerWidth) - 1;
@@ -236,15 +234,16 @@ export class Base {
           break;
       }
     });
-    // renderer.domElement.addEventListener("click", clickEvent);
-    // renderer.domElement.addEventListener("dblclick", delclickEvent);
 
     dom.appendChild(renderer.domElement);
     renderer.setSize(dom.offsetWidth, dom.offsetHeight);
     renderer.render(scene, camera);
 
+    const clock = new Clock();
     const animate = () => {
+      const delta = clock.getDelta();
       orbitControls.update();
+      flyControls.update(delta);
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     };
@@ -259,7 +258,6 @@ export class Base {
     });
 
     this.eventManager = eventManager;
-    // this.raycaster = raycaster;
     this.renderer = renderer;
     this.camera = camera;
     this.scene = scene;
